@@ -1,0 +1,42 @@
+whitelisted-mobs:
+- 'SKELETON'
+- 'ZOMBIE'
+- 'PIG_ZOMBIE'
+- 'ENDERMAN'
+- 'COW'
+- 'PIG'
+- 'VILLAGER'
+- 'IRON_GOLEM'
+- 'WITCH'
+collector-item:
+  material: 'BEACON'
+  name: '&e&l(!) &cFaction Collector &e&l(!)'
+  lore:
+  - '&fPlace this down in a chunk and right click'
+  - '&fon it to open the interface.'
+reaper-wand-item:
+  material: 'WOOD_HOE'
+  name: '&e&l(!) &5ReaperWand &e&l(!)'
+  lore:
+  - '&fClick on a mob in the faction collector to sell 100x mobs!'
+gui:
+  title: '&cFaction Collector'
+  size: 9
+  item-template:
+    name: '&e&l(!) &f{mob} &e&l(!)'
+    lore:
+    - '&eYou have &c{amount} &emobs to sell.'
+    - '&eClick here to sell 10 or purchase a'
+    - '&eReaper off of the BuyCraft'
+max-gui-clicks-range: '20:50'
+gui-click-threshold: 4
+sell-values:
+  skeleton: 4.0
+  zombie: 4.0
+  pig_zombie: 17.0
+  enderman: 14.0
+  cow: 8.0
+  pig: 8.0
+  villager: 20.0
+  iron_golem: 25.0
+  witch: 20.0

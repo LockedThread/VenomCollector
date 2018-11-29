@@ -1,0 +1,7 @@
+name: FactionCollector
+author: LilProteinShakec (Simpleness)
+version: 1.0
+main: com.protein.factioncollector.FactionCollector
+depend: [Vault, Factions, WorldGuard, SilkSpawners]
+commands:
+  collector:
