@@ -89,13 +89,13 @@ public class EntityListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         if (!event.isCancelled()) {
-            if (!Utils.canEdit(event.getPlayer(), event.getBlock().getLocation())) {
-                event.getPlayer().sendMessage(Messages.YOU_CANT_PLACE_HERE.toString());
-                event.setCancelled(true);
-                return;
-            }
             Collector collector = INSTANCE.findCollector(event.getBlock().getChunk());
             if (collector != null && collector.getLocation().equals(event.getBlock().getLocation())) {
+                if (!Utils.canEdit(event.getPlayer(), event.getBlock().getLocation())) {
+                    event.getPlayer().sendMessage(Messages.YOU_CANT_PLACE_HERE.toString());
+                    event.setCancelled(true);
+                    return;
+                }
                 INSTANCE.getCollectors().remove(INSTANCE.findCollector(event.getBlock().getChunk()));
             }
         }
