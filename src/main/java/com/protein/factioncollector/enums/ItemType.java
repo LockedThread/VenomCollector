@@ -8,7 +8,8 @@ public enum ItemType {
     SELL_WAND,
     TNT_WAND,
     COLLECTOR,
-    GUI_BACKGROUND;
+    GUI_BACKGROUND,
+    INFO;
 
     private ItemStack itemStack;
 

@@ -28,6 +28,7 @@ public class CollectorGUI {
 
     public void openInventory(Player player) {
         Inventory inventory = Bukkit.createInventory(null, 36, ChatColor.translateAlternateColorCodes('&', INSTANCE.getConfig().getString("gui.title")));
+        inventory.setItem(4, ItemType.INFO.getItemStack());
         for (int i = 0; i < inventory.getSize(); i++) {
             if (i <= 8 || ((i + 1) % 9 == 0 || (i + 1) % 9 == 1) || (i >= 26 && i <= 36) || (i <= 11 && i >= 10) || (i >= 15 && i <= 18)) {
                 ItemStack item = inventory.getItem(i);

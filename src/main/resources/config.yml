@@ -45,6 +45,17 @@ background-item:
   glasspane:
     enabled: true
     color: 'RED'
+help-item:
+  material: 'BOOK'
+  name: '&eInfo'
+  lore:
+  - '&eFaction Collectors allow you to easily store and sell'
+  - '&emobs for money, along with gathering tnt from creepers and'
+  - '&ethe harvesting of Cactus and Sugar Cane.'
+  enchanted: false
+  glasspane:
+    enabled: false
+    color: 'RED'
 gui:
   title: '&cFaction Collector'
   item-template:
