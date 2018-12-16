@@ -26,6 +26,7 @@ import org.venompvp.venom.utils.Utils;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 public class EntityListener implements Listener {
 
@@ -102,10 +103,12 @@ public class EntityListener implements Listener {
 
     @EventHandler
     public void onItemSpawn(ItemSpawnEvent event) {
-        final ItemStack itemStack = event.getEntity().getItemStack();
-        if (itemStack.getType() == Material.SUGAR_CANE || itemStack.getType() == Material.CACTUS) {
-            INSTANCE.findCollector(event.getLocation().getChunk()).addToAmounts(CollectionType.valueOf(itemStack.getType().name()), 1);
-            event.setCancelled(true);
+        if (event.getEntity() != null) {
+            final ItemStack itemStack = event.getEntity().getItemStack();
+            if (itemStack != null && (itemStack.getType() == Material.SUGAR_CANE || itemStack.getType() == Material.CACTUS)) {
+                INSTANCE.findCollector(event.getLocation().getChunk()).addToAmounts(CollectionType.valueOf(itemStack.getType().name()), 1);
+                event.setCancelled(true);
+            }
         }
     }
 
@@ -141,7 +144,7 @@ public class EntityListener implements Listener {
     public void onInventoryClose(InventoryCloseEvent event) {
         if (event.getPlayer() instanceof Player &&
                 event.getInventory() != null &&
-                event.getInventory().getSize() == INSTANCE.getConfig().getInt("gui.size") &&
+                event.getInventory().getSize() == 36 &&
                 event.getInventory().getTitle().equals(ChatColor.translateAlternateColorCodes('&', INSTANCE.getConfig().getString("gui.title")))) {
             searchAndRemove((Player) event.getPlayer());
         }
@@ -155,30 +158,35 @@ public class EntityListener implements Listener {
                 event.getClickedInventory().getSize() == 36 &&
                 event.getClickedInventory().getTitle().equals(ChatColor.translateAlternateColorCodes('&', INSTANCE.getConfig().getString("gui.title")))) {
             event.setCancelled(true);
-            System.out.println("cancelled");
             final Player player = (Player) event.getWhoClicked();
             final Optional<CollectionType> collectionType = getCollectionType(event.getCurrentItem());
-            collectionType.ifPresent(collectionType1 -> INSTANCE.getServer().getScheduler().runTaskAsynchronously(INSTANCE, () -> INSTANCE.getCollectors().forEach((collector) -> collector.getViewers().stream().filter(viewer -> player.getUniqueId().toString().equals(viewer.toString())).forEach(viewer -> {
-                int amount = collector.getAmount(collectionType1);
-                if (amount > 0) {
+            collectionType.ifPresent(collectionType1 -> {
+                for (Collector collector : INSTANCE.getCollectors()) {
+                    for (UUID viewer : collector.getViewers()) {
+                        if (player.getUniqueId().toString().equals(viewer.toString())) {
+                            int amount = collector.getAmount(collectionType1);
+                            if (amount > 0) {
 
-                    int remainder = sub10OrReturn0(amount, collectionType.get() == CollectionType.TNT ? 64 : 10), amountToBeSubtracted = collectionType.get() == CollectionType.TNT ? 64 : 10;
-                    if (remainder > 0) amountToBeSubtracted = remainder;
+                                int remainder = sub10OrReturn0(amount, collectionType.get() == CollectionType.TNT ? 64 : 10), amountToBeSubtracted = collectionType.get() == CollectionType.TNT ? 64 : 10;
+                                if (remainder > 0) amountToBeSubtracted = remainder;
 
-                    if (collectionType.get() == CollectionType.TNT) {
-                        if (player.getInventory().firstEmpty() != -1) {
-                            player.getInventory().addItem(new ItemStack(Material.TNT, amountToBeSubtracted));
-                        } else {
-                            player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(Material.TNT, amountToBeSubtracted));
+                                if (collectionType.get() == CollectionType.TNT) {
+                                    if (player.getInventory().firstEmpty() != -1) {
+                                        player.getInventory().addItem(new ItemStack(Material.TNT, amountToBeSubtracted));
+                                    } else {
+                                        player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(Material.TNT, amountToBeSubtracted));
+                                    }
+                                } else {
+                                    INSTANCE.getVenom().getEconomy().depositPlayer(player, collectionType1.getValue() * amountToBeSubtracted);
+                                    player.sendMessage(Messages.SOLD.toString().replace("{amount}", String.valueOf(collectionType1.getValue() * amountToBeSubtracted)));
+                                }
+                                collector.subtractFromAmounts(collectionType1, amountToBeSubtracted);
+                                collector.update(collectionType1);
+                            }
                         }
-                    } else {
-                        INSTANCE.getVenom().getEconomy().depositPlayer(player, collectionType1.getValue() * amountToBeSubtracted);
-                        player.sendMessage(Messages.SOLD.toString().replace("{amount}", String.valueOf(collectionType1.getValue() * amountToBeSubtracted)));
                     }
-                    collector.subtractFromAmounts(collectionType1, amountToBeSubtracted);
-                    collector.update(collectionType1);
                 }
-            }))));
+            });
         }
     }
 
