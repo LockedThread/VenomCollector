@@ -75,14 +75,14 @@ public class EntityListener implements Listener {
         if (!event.isCancelled() && event.getBlockPlaced() != null && event.getItemInHand() != null && Utils.isItem(event.getItemInHand(), ItemType.COLLECTOR.getItemStack())) {
             Player player = event.getPlayer();
             if (!Utils.canEdit(player, event.getBlockPlaced().getLocation())) {
-                return;
-            }
-            if (INSTANCE.findCollector(event.getBlockPlaced().getChunk()) != null) {
+                player.sendMessage(Messages.YOU_CANT_PLACE_HERE.toString());
+                event.setCancelled(true);
+            } else if (INSTANCE.findCollector(event.getBlockPlaced().getChunk()) != null) {
                 player.sendMessage(Messages.ALREADY_COLLECTOR_IN_CHUNK.toString());
                 event.setCancelled(true);
-                return;
+            } else {
+                INSTANCE.getCollectors().add(new Collector(event.getBlockPlaced().getLocation()));
             }
-            INSTANCE.getCollectors().add(new Collector(event.getBlockPlaced().getLocation()));
         }
     }
 
