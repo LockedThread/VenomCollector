@@ -27,9 +27,6 @@ public class FactionCollectorGiveCommand extends Command {
 
     @Override
     public void execute(CommandSender sender, List<Argument> args, String label) {
-        for (Argument arg : args) {
-            System.out.println(arg.getValue().toString());
-        }
         ItemType itemType = (ItemType) args.get(1).getValue();
         Player target = (Player) args.get(0).getValue();
         target.getInventory().addItem(itemType.getItemStack());
