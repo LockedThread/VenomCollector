@@ -1,5 +1,8 @@
 package com.protein.factioncollector.listeners;
 
+import com.massivecraft.factions.entity.Faction;
+import com.massivecraft.factions.entity.MPerm;
+import com.massivecraft.factions.entity.MPlayer;
 import com.protein.factioncollector.FactionCollector;
 import com.protein.factioncollector.enums.CollectionType;
 import com.protein.factioncollector.enums.ItemType;
@@ -7,6 +10,7 @@ import com.protein.factioncollector.enums.Messages;
 import com.protein.factioncollector.objs.Collector;
 import net.techcable.tacospigot.event.entity.SpawnerPreSpawnEvent;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -22,6 +26,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+import org.venompvp.venom.Venom;
 import org.venompvp.venom.utils.Utils;
 
 import java.util.Map;
@@ -74,7 +79,7 @@ public class EntityListener implements Listener {
     public void onBlockPlace(BlockPlaceEvent event) {
         if (!event.isCancelled() && event.getBlockPlaced() != null && event.getItemInHand() != null && Utils.isItem(event.getItemInHand(), ItemType.COLLECTOR.getItemStack())) {
             Player player = event.getPlayer();
-            if (!Utils.canEdit(player, event.getBlockPlaced().getLocation())) {
+            if (!canPlace(player, event.getBlockPlaced().getLocation())) {
                 player.sendMessage(Messages.YOU_CANT_PLACE_HERE.toString());
                 event.setCancelled(true);
             } else if (INSTANCE.findCollector(event.getBlockPlaced().getChunk()) != null) {
@@ -91,7 +96,7 @@ public class EntityListener implements Listener {
         if (!event.isCancelled()) {
             Collector collector = INSTANCE.findCollector(event.getBlock().getChunk());
             if (collector != null && collector.getLocation().equals(event.getBlock().getLocation())) {
-                if (!Utils.canEdit(event.getPlayer(), event.getBlock().getLocation())) {
+                if (!canPlace(event.getPlayer(), event.getBlock().getLocation())) {
                     event.getPlayer().sendMessage(Messages.YOU_CANT_PLACE_HERE.toString());
                     event.setCancelled(true);
                     return;
@@ -217,5 +222,12 @@ public class EntityListener implements Listener {
 
     private int sub10OrReturn0(int i, int divisor) {
         return i < 0 ? -1 : i % divisor > 0 && i < divisor ? i % divisor : 0;
+    }
+
+    private boolean canPlace(Player player, Location location) {
+        MPlayer mPlayer = MPlayer.get(player);
+        Faction target = Utils.getFactionAt(location);
+        return !target.isNone() && Venom.getInstance().getWorldGuardPlugin().canBuild(player, location) && target.getName().equals(mPlayer.getFaction().getName()) &&
+                mPlayer.getFaction().isPermitted(MPerm.getPermBuild(), mPlayer.getRelationTo(target));
     }
 }
