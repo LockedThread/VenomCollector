@@ -111,8 +111,11 @@ public class EntityListener implements Listener {
         if (event.getEntity() != null) {
             final ItemStack itemStack = event.getEntity().getItemStack();
             if (itemStack != null && (itemStack.getType() == Material.SUGAR_CANE || itemStack.getType() == Material.CACTUS)) {
-                INSTANCE.findCollector(event.getLocation().getChunk()).addToAmounts(CollectionType.valueOf(itemStack.getType().name()), 1);
                 event.setCancelled(true);
+                Collector collector = INSTANCE.findCollector(event.getLocation().getChunk());
+                if (collector != null) {
+                    INSTANCE.findCollector(event.getLocation().getChunk()).addToAmounts(CollectionType.valueOf(itemStack.getType().name()), 1);
+                }
             }
         }
     }
