@@ -66,8 +66,7 @@ public class EntityListener implements Listener {
                         } else {
                             collector.reset(CollectionType.TNT);
                             player.sendMessage(Messages.COLLECTED_TNT.toString().replace("{amount}", String.valueOf(amount)));
-
-                            // TODO: Add faction bank shit 12/8/2018
+                            Utils.getFactionByPlayer(player).addAmountToTntBank(amount);
                         }
                     } else {
                         collector.getCollectorGUI().openInventory(player);
