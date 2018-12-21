@@ -52,9 +52,13 @@ public class EntityListener implements Listener {
                                 .filter(entry -> entry.getKey() != CollectionType.TNT && entry.getValue() > 0)
                                 .mapToDouble(entry -> (entry.getValue() * entry.getKey().getValue()))
                                 .sum();
-                        collector.getAmounts().forEach((key, value) -> collector.reset(key));
-                        INSTANCE.getVenom().getEconomy().depositPlayer(player, money);
-                        player.sendMessage(Messages.SOLD.toString().replace("{amount}", String.valueOf(money)));
+                        if (money == 0) {
+                            player.sendMessage(Messages.NOTHING_TO_SELL.toString());
+                        } else {
+                            collector.getAmounts().entrySet().stream().filter(entry -> entry.getKey() != CollectionType.TNT).forEach(entry -> collector.reset(entry.getKey()));
+                            INSTANCE.getVenom().getEconomy().depositPlayer(player, money);
+                            player.sendMessage(Messages.SOLD.toString().replace("{amount}", String.valueOf(money)));
+                        }
                     } else if (Utils.isItem(event.getItem(), ItemType.TNT_WAND.getItemStack())) {
                         int amount = collector.getAmounts().entrySet().stream().filter(entry -> entry.getKey() == CollectionType.TNT).mapToInt(Map.Entry::getValue).sum();
                         if (amount == 0) {

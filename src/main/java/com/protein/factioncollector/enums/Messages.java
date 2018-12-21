@@ -12,7 +12,8 @@ public enum Messages {
     ERROR("&c&l(!) &cError parsing command!"),
     GIVEN("&a&l(!) &aYou've given {player} a {item-type}!"),
     COLLECTED_TNT("&a&l(!) &aYou've deposited {amount} to your faction's TNTBank!"),
-    NO_TNT_TO_DEPOSIT("&c&l(!) &cYou don't have any TNT to deposit");
+    NO_TNT_TO_DEPOSIT("&c&l(!) &cYou don't have any TNT to deposit"),
+    NOTHING_TO_SELL("&c&l(!) &cNothing to sell in the Faction Collector");
 
     private String message;
 
