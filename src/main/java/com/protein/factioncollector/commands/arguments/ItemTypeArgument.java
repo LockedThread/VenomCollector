@@ -28,6 +28,10 @@ public class ItemTypeArgument extends Argument<ItemType> {
             setValue(ItemType.TNT_WAND);
             return true;
         }
+        if (check.equalsIgnoreCase("harvesterhoe")) {
+            setValue(ItemType.HARVESTER_HOE);
+            return true;
+        }
         return false;
     }
 }

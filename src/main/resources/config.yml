@@ -1,3 +1,5 @@
+sell-quantity: 100
+
 whitelisted-mobs:
 - 'PIG_ZOMBIE'
 - 'ENDERMAN'
@@ -9,6 +11,15 @@ whitelisted-mobs:
 - 'CACTUS'
 - 'SUGAR_CANE'
 - 'TNT'
+harvester-hoe-item:
+  material: 'DIAMOND_HOE'
+  name: '&e&l(!) &eHarvesterHoe &e&l(!)'
+  lore:
+  - '&fBreak sugar cane for 2x drops!'
+  enchanted: true
+  glasspane:
+    enabled: false
+    color: 'RED'
 collector-item:
   material: 'BEACON'
   name: '&e&l(!) &cFaction Collector &e&l(!)'

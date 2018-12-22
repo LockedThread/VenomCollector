@@ -23,7 +23,7 @@ public class FactionCollectorListCommand extends Command {
 
     @Override
     public void execute(CommandSender sender, List<Argument> args, String label) {
-        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e&l(!) &eItemTypes: &ccollector, sellwand, tntwand"));
+        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e&l(!) &eItemTypes: &ccollector, sellwand, tntwand, harvesterhoe"));
     }
 
     @Override

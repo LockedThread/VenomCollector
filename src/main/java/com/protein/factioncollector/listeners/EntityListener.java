@@ -12,6 +12,8 @@ import net.techcable.tacospigot.event.entity.SpawnerPreSpawnEvent;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -97,16 +99,37 @@ public class EntityListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         if (!event.isCancelled()) {
-            Collector collector = INSTANCE.findCollector(event.getBlock().getChunk());
-            if (collector != null && collector.getLocation().equals(event.getBlock().getLocation())) {
-                if (!canPlace(event.getPlayer(), event.getBlock().getLocation())) {
-                    event.getPlayer().sendMessage(Messages.YOU_CANT_PLACE_HERE.toString());
+            Player player = event.getPlayer();
+            Block block = event.getBlock();
+            if (block.getType() == Material.SUGAR_CANE_BLOCK && Utils.isItem(event.getPlayer().getItemInHand(), ItemType.HARVESTER_HOE.getItemStack())) {
+                Collector collector = INSTANCE.findCollector(block.getChunk());
+                if (collector == null) {
+                    player.sendMessage(Messages.ONLY_USED_IN_COLLECTOR_CHUNK.toString());
                     event.setCancelled(true);
                     return;
                 }
-                INSTANCE.getCollectors().remove(INSTANCE.findCollector(event.getBlock().getChunk()));
+                int a = 0;
+                Block next = block;
+                while (next != null && next.getType() == Material.SUGAR_CANE_BLOCK) {
+                    Utils.editBlockType(next.getLocation(), Material.AIR);
+                    a += 2;
+                    next = next.getRelative(BlockFace.UP);
+                }
+                collector.addToAmounts(CollectionType.SUGAR_CANE, a);
+                event.setCancelled(true);
+                return;
+            }
+            Collector collector = INSTANCE.findCollector(block.getChunk());
+            if (collector != null && collector.getLocation().equals(block.getLocation())) {
+                if (!canPlace(player, block.getLocation())) {
+                    player.sendMessage(Messages.YOU_CANT_PLACE_HERE.toString());
+                    event.setCancelled(true);
+                    return;
+                }
+                INSTANCE.getCollectors().remove(INSTANCE.findCollector(block.getChunk()));
             }
         }
+
     }
 
     @EventHandler
@@ -178,7 +201,8 @@ public class EntityListener implements Listener {
                             int amount = collector.getAmount(collectionType1);
                             if (amount > 0) {
 
-                                int remainder = sub10OrReturn0(amount, collectionType.get() == CollectionType.TNT ? 64 : 10), amountToBeSubtracted = collectionType.get() == CollectionType.TNT ? 64 : 10;
+                                int remainder = sub10OrReturn0(amount, collectionType.get() == CollectionType.TNT ? 64 : INSTANCE.getConfig().getInt("sell-quantity")),
+                                        amountToBeSubtracted = collectionType.get() == CollectionType.TNT ? 64 : INSTANCE.getConfig().getInt("sell-quantity");
                                 if (remainder > 0) amountToBeSubtracted = remainder;
 
                                 if (collectionType.get() == CollectionType.TNT) {

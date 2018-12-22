@@ -48,11 +48,13 @@ public class FactionCollector extends Module {
         getConfig().options().copyDefaults(true);
         saveConfig();
 
+        ItemType.HARVESTER_HOE.setItemStack(Utils.configSectionToItemStack(getConfig(), "harvester-hoe-item"));
         ItemType.COLLECTOR.setItemStack(Utils.configSectionToItemStack(getConfig(), "collector-item"));
         ItemType.SELL_WAND.setItemStack(Utils.configSectionToItemStack(getConfig(), "sell-wand-item"));
         ItemType.TNT_WAND.setItemStack(Utils.configSectionToItemStack(getConfig(), "tnt-wand-item"));
         ItemType.GUI_BACKGROUND.setItemStack(Utils.configSectionToItemStack(getConfig(), "background-item"));
         ItemType.INFO.setItemStack(Utils.configSectionToItemStack(getConfig(), "help-item"));
+
 
         guiItemHashMap = new EnumMap<>(CollectionType.class);
         whiteListedCollectionTypes = new ArrayList<>(getConfig().getStringList("whitelisted-mobs"));

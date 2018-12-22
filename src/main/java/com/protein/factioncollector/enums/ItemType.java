@@ -5,6 +5,7 @@ import org.venompvp.venom.utils.Utils;
 
 public enum ItemType {
 
+    HARVESTER_HOE,
     SELL_WAND,
     TNT_WAND,
     COLLECTOR,
