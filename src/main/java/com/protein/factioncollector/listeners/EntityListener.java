@@ -101,18 +101,19 @@ public class EntityListener implements Listener {
         if (!event.isCancelled()) {
             Player player = event.getPlayer();
             Block block = event.getBlock();
-            if (block.getType() == Material.SUGAR_CANE_BLOCK && Utils.isItem(event.getPlayer().getItemInHand(), ItemType.HARVESTER_HOE.getItemStack())) {
+            if (block.getType() == Material.SUGAR_CANE_BLOCK) {
                 Collector collector = INSTANCE.findCollector(block.getChunk());
                 if (collector == null) {
                     player.sendMessage(Messages.ONLY_USED_IN_COLLECTOR_CHUNK.toString());
                     event.setCancelled(true);
                     return;
                 }
+                final boolean isItem = Utils.isItem(event.getPlayer().getItemInHand(), ItemType.HARVESTER_HOE.getItemStack());
                 int a = 0;
                 Block next = block;
                 while (next != null && next.getType() == Material.SUGAR_CANE_BLOCK) {
                     Utils.editBlockType(next.getLocation(), Material.AIR);
-                    a += 2;
+                    a += isItem ? 2 : 1;
                     next = next.getRelative(BlockFace.UP);
                 }
                 collector.addToAmounts(CollectionType.SUGAR_CANE, a);
