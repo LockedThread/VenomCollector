@@ -141,10 +141,12 @@ public class EntityListener implements Listener {
             final ItemStack itemStack = event.getEntity().getItemStack();
             if (itemStack != null && (itemStack.getType() == Material.SUGAR_CANE || itemStack.getType() == Material.CACTUS)) {
                 event.setCancelled(true);
-                final Collector collector = INSTANCE.findCollector(event.getLocation().getChunk());
-                if (collector != null) {
-                    collector.addToAmounts(CollectionType.valueOf(itemStack.getType().name()), 1);
-                }
+                INSTANCE.getServer().getScheduler().runTaskAsynchronously(INSTANCE, () -> {
+                    final Collector collector = INSTANCE.findCollector(event.getLocation().getChunk());
+                    if (collector != null) {
+                        collector.addToAmounts(CollectionType.valueOf(itemStack.getType().name()), 1);
+                    }
+                });
             }
         }
     }
@@ -152,18 +154,20 @@ public class EntityListener implements Listener {
     @EventHandler
     public void onSpawnerPreSpawn(SpawnerPreSpawnEvent event) {
         if (INSTANCE.getWhiteListedCollectionTypes().contains(event.getSpawnedType().name()) || (INSTANCE.getWhiteListedCollectionTypes().contains("TNT")) && event.getSpawnedType() == EntityType.CREEPER) {
-            Collector collector = INSTANCE.findCollector(event.getLocation().getChunk());
-            if (collector != null) {
-                event.setCancelled(true);
-                if (event.getSpawnedType() == EntityType.CREEPER) {
-                    final int i = INSTANCE.getVenom().random.nextInt(2);
-                    if (i == 0) {
-                        collector.addToAmounts(CollectionType.TNT, 1);
+            event.setCancelled(true);
+            INSTANCE.getServer().getScheduler().runTaskAsynchronously(INSTANCE, () -> {
+                Collector collector = INSTANCE.findCollector(event.getLocation().getChunk());
+                if (collector != null) {
+                    if (event.getSpawnedType() == EntityType.CREEPER) {
+                        final int i = INSTANCE.getVenom().random.nextInt(2);
+                        if (i == 0) {
+                            collector.addToAmounts(CollectionType.TNT, 1);
+                        }
+                    } else {
+                        CollectionType.fromEntityType(event.getSpawnedType()).ifPresent(collectionType1 -> collector.addToAmounts(collectionType1, 1));
                     }
-                } else {
-                    CollectionType.fromEntityType(event.getSpawnedType()).ifPresent(collectionType1 -> collector.addToAmounts(collectionType1, 1));
                 }
-            }
+            });
         }
     }
 
