@@ -7,11 +7,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.venompvp.venom.commands.Command;
 import org.venompvp.venom.commands.arguments.Argument;
+import org.venompvp.venom.commands.arguments.IntegerArgument;
 import org.venompvp.venom.commands.arguments.PlayerArgument;
 import org.venompvp.venom.module.Module;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class FactionCollectorGiveCommand extends Command {
 
@@ -20,7 +22,7 @@ public class FactionCollectorGiveCommand extends Command {
                 module.getCommandHandler().getCommand(FactionCollectorCommand.class),
                 "give",
                 "give players collector items",
-                Arrays.asList(PlayerArgument.class, ItemTypeArgument.class),
+                Arrays.asList(PlayerArgument.class, ItemTypeArgument.class, IntegerArgument.class),
                 "venom.factioncollector.give",
                 false);
     }
@@ -29,7 +31,8 @@ public class FactionCollectorGiveCommand extends Command {
     public void execute(CommandSender sender, List<Argument> args, String label) {
         ItemType itemType = (ItemType) args.get(1).getValue();
         Player target = (Player) args.get(0).getValue();
-        target.getInventory().addItem(itemType.getItemStack());
+        int amount = (int) args.get(2).getValue();
+        IntStream.range(0, amount).forEach(i -> target.getInventory().addItem(itemType.getItemStack()));
         sender.sendMessage(Messages.GIVEN.toString().replace("{player}", target.getName()).replace("{item-type}", itemType.toString()));
     }
 
