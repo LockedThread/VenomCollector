@@ -129,6 +129,7 @@ public class EntityListener implements Listener {
                     return;
                 }
                 INSTANCE.getCollectorHashMap().remove(INSTANCE.chunkToString(block.getChunk()));
+                block.getWorld().dropItemNaturally(block.getLocation(), ItemType.COLLECTOR.getItemStack());
             }
         }
 
