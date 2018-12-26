@@ -43,7 +43,7 @@ public class EntityListener implements Listener {
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getClickedBlock() != null && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             Collector collector = INSTANCE.findCollector(event.getClickedBlock().getChunk());
-            if (collector != null && collector.getLocation().equals(event.getClickedBlock().getLocation())) {
+            if (collector != null && Utils.compareLocations(collector.getLocation(), event.getClickedBlock().getLocation())) {
                 Player player = event.getPlayer();
                 event.setCancelled(true);
                 if (event.getItem() != null) {
@@ -84,14 +84,15 @@ public class EntityListener implements Listener {
     public void onBlockPlace(BlockPlaceEvent event) {
         if (!event.isCancelled() && event.getBlockPlaced() != null && event.getItemInHand() != null && Utils.isItem(event.getItemInHand(), ItemType.COLLECTOR.getItemStack())) {
             Player player = event.getPlayer();
-            if (!canPlace(player, event.getBlockPlaced().getLocation())) {
+            Location location = event.getBlockPlaced().getLocation();
+            if (!canPlace(player, location)) {
                 player.sendMessage(Messages.YOU_CANT_PLACE_HERE.toString());
                 event.setCancelled(true);
-            } else if (INSTANCE.findCollector(event.getBlockPlaced().getChunk()) != null) {
+            } else if (INSTANCE.containsCollector(location.getChunk())) {
                 player.sendMessage(Messages.ALREADY_COLLECTOR_IN_CHUNK.toString());
                 event.setCancelled(true);
             } else {
-                INSTANCE.getCollectors().add(new Collector(event.getBlockPlaced().getLocation()));
+                INSTANCE.getCollectorHashMap().put(INSTANCE.chunkToString(location.getChunk()), new Collector(location));
             }
         }
     }
@@ -102,7 +103,7 @@ public class EntityListener implements Listener {
             Player player = event.getPlayer();
             Block block = event.getBlock();
             if (block.getType() == Material.SUGAR_CANE_BLOCK) {
-                Collector collector = INSTANCE.findCollector(block.getChunk());
+                final Collector collector = INSTANCE.findCollector(block.getChunk());
                 if (collector == null) {
                     player.sendMessage(Messages.ONLY_USED_IN_COLLECTOR_CHUNK.toString());
                     event.setCancelled(true);
@@ -120,14 +121,14 @@ public class EntityListener implements Listener {
                 event.setCancelled(true);
                 return;
             }
-            Collector collector = INSTANCE.findCollector(block.getChunk());
+            final Collector collector = INSTANCE.findCollector(block.getChunk());
             if (collector != null && collector.getLocation().equals(block.getLocation())) {
                 if (!canPlace(player, block.getLocation())) {
                     player.sendMessage(Messages.YOU_CANT_PLACE_HERE.toString());
                     event.setCancelled(true);
                     return;
                 }
-                INSTANCE.getCollectors().remove(INSTANCE.findCollector(block.getChunk()));
+                INSTANCE.getCollectorHashMap().remove(INSTANCE.chunkToString(block.getChunk()));
             }
         }
 
@@ -139,9 +140,9 @@ public class EntityListener implements Listener {
             final ItemStack itemStack = event.getEntity().getItemStack();
             if (itemStack != null && (itemStack.getType() == Material.SUGAR_CANE || itemStack.getType() == Material.CACTUS)) {
                 event.setCancelled(true);
-                Collector collector = INSTANCE.findCollector(event.getLocation().getChunk());
+                final Collector collector = INSTANCE.findCollector(event.getLocation().getChunk());
                 if (collector != null) {
-                    INSTANCE.findCollector(event.getLocation().getChunk()).addToAmounts(CollectionType.valueOf(itemStack.getType().name()), 1);
+                    collector.addToAmounts(CollectionType.valueOf(itemStack.getType().name()), 1);
                 }
             }
         }
@@ -195,34 +196,32 @@ public class EntityListener implements Listener {
             event.setCancelled(true);
             final Player player = (Player) event.getWhoClicked();
             final Optional<CollectionType> collectionType = getCollectionType(event.getCurrentItem());
-            collectionType.ifPresent(collectionType1 -> {
-                for (Collector collector : INSTANCE.getCollectors()) {
-                    for (UUID viewer : collector.getViewers()) {
-                        if (player.getUniqueId().toString().equals(viewer.toString())) {
-                            int amount = collector.getAmount(collectionType1);
-                            if (amount > 0) {
+            collectionType.ifPresent(collectionType1 -> INSTANCE.getCollectorHashMap().forEach((key, value) -> {
+                for (UUID viewer : value.getViewers()) {
+                    if (player.getUniqueId().toString().equals(viewer.toString())) {
+                        int amount = value.getAmount(collectionType1);
+                        if (amount > 0) {
 
-                                int remainder = sub10OrReturn0(amount, collectionType.get() == CollectionType.TNT ? 64 : INSTANCE.getConfig().getInt("sell-quantity")),
-                                        amountToBeSubtracted = collectionType.get() == CollectionType.TNT ? 64 : INSTANCE.getConfig().getInt("sell-quantity");
-                                if (remainder > 0) amountToBeSubtracted = remainder;
+                            int remainder = sub10OrReturn0(amount, collectionType.get() == CollectionType.TNT ? 64 : INSTANCE.getConfig().getInt("sell-quantity")),
+                                    amountToBeSubtracted = collectionType.get() == CollectionType.TNT ? 64 : INSTANCE.getConfig().getInt("sell-quantity");
+                            if (remainder > 0) amountToBeSubtracted = remainder;
 
-                                if (collectionType.get() == CollectionType.TNT) {
-                                    if (player.getInventory().firstEmpty() != -1) {
-                                        player.getInventory().addItem(new ItemStack(Material.TNT, amountToBeSubtracted));
-                                    } else {
-                                        player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(Material.TNT, amountToBeSubtracted));
-                                    }
+                            if (collectionType.get() == CollectionType.TNT) {
+                                if (player.getInventory().firstEmpty() != -1) {
+                                    player.getInventory().addItem(new ItemStack(Material.TNT, amountToBeSubtracted));
                                 } else {
-                                    INSTANCE.getVenom().getEconomy().depositPlayer(player, collectionType1.getValue() * amountToBeSubtracted);
-                                    player.sendMessage(Messages.SOLD.toString().replace("{amount}", String.valueOf(collectionType1.getValue() * amountToBeSubtracted)));
+                                    player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(Material.TNT, amountToBeSubtracted));
                                 }
-                                collector.subtractFromAmounts(collectionType1, amountToBeSubtracted);
-                                collector.update(collectionType1);
+                            } else {
+                                INSTANCE.getVenom().getEconomy().depositPlayer(player, collectionType1.getValue() * amountToBeSubtracted);
+                                player.sendMessage(Messages.SOLD.toString().replace("{amount}", String.valueOf(collectionType1.getValue() * amountToBeSubtracted)));
                             }
+                            value.subtractFromAmounts(collectionType1, amountToBeSubtracted);
+                            value.update(collectionType1);
                         }
                     }
                 }
-            });
+            }));
         }
     }
 
@@ -248,7 +247,15 @@ public class EntityListener implements Listener {
     }
 
     private void searchAndRemove(Player player) {
-        INSTANCE.getServer().getScheduler().runTaskAsynchronously(INSTANCE, () -> INSTANCE.getCollectors().forEach(collector -> collector.getViewers().stream().filter(viewer -> viewer.toString().equals(player.getUniqueId().toString())).forEach(viewer -> collector.getViewers().remove(viewer))));
+        INSTANCE
+                .getServer()
+                .getScheduler()
+                .runTaskAsynchronously(INSTANCE, () -> INSTANCE.getCollectorHashMap()
+                        .entrySet()
+                        .stream()
+                        .filter(entry -> entry.getValue().getViewers().contains(player.getUniqueId()))
+                        .findFirst()
+                        .ifPresent(entry -> entry.getValue().getViewers().remove(player.getUniqueId())));
     }
 
     private int sub10OrReturn0(int i, int divisor) {

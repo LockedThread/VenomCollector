@@ -7,6 +7,7 @@ import com.protein.factioncollector.enums.ItemType;
 import com.protein.factioncollector.enums.Messages;
 import com.protein.factioncollector.listeners.EntityListener;
 import com.protein.factioncollector.objs.Collector;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
@@ -24,13 +25,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.HashMap;
 
 @ModuleInfo(name = "FactionCollector", author = "LilProteinShake", version = "1.0", description = "CropHopper and VoidChest that collects mobs, tnt, and crops")
 public class FactionCollector extends Module {
 
     private static FactionCollector instance = null;
-    private ConcurrentLinkedQueue<Collector> collectors;
+    private HashMap<String, Collector> collectorHashMap;
     private File dataFile;
     private ArrayList<String> whiteListedCollectionTypes;
     private EnumMap<CollectionType, ItemStack> guiItemHashMap;
@@ -90,15 +91,15 @@ public class FactionCollector extends Module {
             if (!dataFile.exists()) {
                 dataFile.getParentFile().mkdirs();
                 dataFile.createNewFile();
-                collectors = new ConcurrentLinkedQueue<>();
+                collectorHashMap = new HashMap<>();
             } else try (FileReader reader = new FileReader(dataFile)) {
-                ArrayList<Collector> arrayList = getVenom().getGson().fromJson(reader, new TypeToken<ArrayList<Collector>>() {
+                HashMap<String, Collector> map = getVenom().getGson().fromJson(reader, new TypeToken<HashMap<String, Collector>>() {
                 }.getType());
-                if (arrayList == null || arrayList.isEmpty()) {
-                    collectors = new ConcurrentLinkedQueue<>();
+                if (map == null || map.isEmpty()) {
+                    collectorHashMap = new HashMap<>();
                 } else {
-                    collectors = new ConcurrentLinkedQueue<>(arrayList);
-                    arrayList.forEach(Collector::initIgnored);
+                    collectorHashMap = new HashMap<>(map);
+                    collectorHashMap.forEach((k, v) -> v.initIgnored());
                 }
             }
         } catch (
@@ -116,15 +117,16 @@ public class FactionCollector extends Module {
         getLogger().info("Finished initializing FactionCollector (" + (System.currentTimeMillis() - startTime) + ")");
     }
 
-    public ConcurrentLinkedQueue<Collector> getCollectors() {
-        return collectors;
+
+    public HashMap<String, Collector> getCollectorHashMap() {
+        return collectorHashMap;
     }
 
     @Override
     public void onDisable() {
-        if (!collectors.isEmpty()) {
+        if (!collectorHashMap.isEmpty()) {
             try (FileWriter fileWriter = new FileWriter(dataFile)) {
-                fileWriter.write(getVenom().getGson().toJson(collectors));
+                fileWriter.write(getVenom().getGson().toJson(collectorHashMap));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -133,8 +135,12 @@ public class FactionCollector extends Module {
         instance = null;
     }
 
+    public boolean containsCollector(Chunk chunk) {
+        return collectorHashMap.containsKey(chunkToString(chunk));
+    }
+
     public Collector findCollector(Chunk chunk) {
-        return collectors.stream().filter(collectorLocation -> chunk.getWorld().getName().equalsIgnoreCase(collectorLocation.getLocation().getChunk().getWorld().getName())).filter(collectorLocation -> chunk.getX() == collectorLocation.getLocation().getChunk().getX()).filter(collectorLocation -> chunk.getZ() == collectorLocation.getLocation().getChunk().getZ()).findFirst().orElse(null);
+        return collectorHashMap.get(chunkToString(chunk));
     }
 
     public ArrayList<String> getWhiteListedCollectionTypes() {
@@ -143,5 +149,15 @@ public class FactionCollector extends Module {
 
     public EnumMap<CollectionType, ItemStack> getGuiItemHashMap() {
         return guiItemHashMap;
+    }
+
+    public String chunkToString(Chunk chunk) {
+        return chunk.getWorld().getName() + "::" + chunk.getX() + "::" + chunk.getZ();
+    }
+
+    public Chunk stringToChunk(String s) {
+        String[] split = s.split("::");
+        int x = Integer.parseInt(split[1]), z = Integer.parseInt(split[2]);
+        return Bukkit.getWorld(split[0]).getChunkAt(x, z);
     }
 }

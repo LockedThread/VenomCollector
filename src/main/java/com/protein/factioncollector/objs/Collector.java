@@ -112,4 +112,11 @@ public class Collector {
     public ConcurrentHashMap<CollectionType, Integer> getAmounts() {
         return amounts;
     }
+
+    @Override
+    public String toString() {
+        return getLocation().toString() + "\n" +
+                getViewers().stream().map(uuid -> uuid + ",").findFirst() + "\n" +
+                getAmounts().entrySet().stream().map(entry -> entry.getKey().name() + " - " + entry.getValue());
+    }
 }
