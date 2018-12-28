@@ -29,7 +29,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
 
-@ModuleInfo(name = "FactionCollector", author = "LilProteinShake", version = "2.0", description = "CropHopper and VoidChest that collects mobs, tnt, and crops")
+@ModuleInfo(name = "FactionCollector", author = "Simpleness", version = "2.0", description = "CropHopper and VoidChest that collects mobs, tnt, and crops")
 public class FactionCollector extends Module {
 
     private static FactionCollector instance = null;
