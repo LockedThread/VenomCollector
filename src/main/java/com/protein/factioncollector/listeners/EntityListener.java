@@ -1,26 +1,22 @@
 package com.protein.factioncollector.listeners;
 
-import com.massivecraft.factions.entity.Faction;
-import com.massivecraft.factions.entity.MPerm;
-import com.massivecraft.factions.entity.MPlayer;
 import com.protein.factioncollector.FactionCollector;
 import com.protein.factioncollector.enums.CollectionType;
 import com.protein.factioncollector.enums.ItemType;
 import com.protein.factioncollector.enums.Messages;
 import com.protein.factioncollector.objs.Collector;
+import me.aceix8.outposts.AceOutposts;
+import me.aceix8.outposts.api.OutpostAPI;
 import net.techcable.tacospigot.event.entity.SpawnerPreSpawnEvent;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -28,7 +24,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
-import org.venompvp.venom.Venom;
 import org.venompvp.venom.utils.Utils;
 
 import java.util.Map;
@@ -38,102 +33,66 @@ import java.util.UUID;
 public class EntityListener implements Listener {
 
     private static final FactionCollector INSTANCE = FactionCollector.getInstance();
+    private static final OutpostAPI OUTPOST_API = AceOutposts.getInstance().getApi();
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOW)
     public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.getClickedBlock() != null && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            Collector collector = INSTANCE.findCollector(event.getClickedBlock().getChunk());
-            if (collector != null && Utils.compareLocations(collector.getLocation(), event.getClickedBlock().getLocation())) {
-                Player player = event.getPlayer();
-                event.setCancelled(true);
-                if (event.getItem() != null) {
-                    if (Utils.isItem(event.getItem(), ItemType.SELL_WAND.getItemStack())) {
-                        double money = collector.getAmounts()
+        Player player = event.getPlayer();
+        if (event.getClickedBlock() != null) {
+            Block block = event.getClickedBlock();
+            final Collector collector = INSTANCE.findCollector(block.getChunk());
+            if (collector != null && Utils.compareLocations(collector.getLocation(), block.getLocation())) {
+                if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                    if (Utils.canEdit(player, block.getLocation())) {
+                        event.setCancelled(true);
+                        if (event.getItem() != null) {
+                            if (Utils.isItem(event.getItem(), ItemType.SELL_WAND.getItemStack())) {
+                                double money = collector.getAmounts()
+                                        .entrySet()
+                                        .stream()
+                                        .filter(entry -> entry.getKey() != CollectionType.TNT && entry.getValue() > 0)
+                                        .mapToDouble(entry -> (entry.getValue() * entry.getKey().getValue()))
+                                        .sum();
+                                if (money == 0) {
+                                    player.sendMessage(Messages.NOTHING_TO_SELL.toString());
+                                } else {
+                                    if (OUTPOST_API.isFactionControllingAnOutpost(Utils.getFactionByPlayer(player))) {
+                                        money *= 2;
+                                    }
+                                    collector.getAmounts().entrySet().stream().filter(entry -> entry.getKey() != CollectionType.TNT).forEach(entry -> collector.reset(entry.getKey()));
+                                    INSTANCE.getVenom().getEconomy().depositPlayer(player, money);
+                                    player.sendMessage(Messages.SOLD.toString().replace("{amount}", String.valueOf(money)));
+                                }
+                            } else if (Utils.isItem(event.getItem(), ItemType.TNT_WAND.getItemStack())) {
+                                int amount = collector.getAmounts().entrySet().stream().filter(entry -> entry.getKey() == CollectionType.TNT).mapToInt(Map.Entry::getValue).sum();
+                                if (amount == 0) {
+                                    player.sendMessage(Messages.NO_TNT_TO_DEPOSIT.toString());
+                                } else {
+                                    collector.reset(CollectionType.TNT);
+                                    player.sendMessage(Messages.COLLECTED_TNT.toString().replace("{amount}", String.valueOf(amount)));
+                                    Utils.getFactionByPlayer(player).addAmountToTntBank(amount);
+                                }
+                            } else {
+                                collector.getCollectorGUI().openInventory(player);
+                            }
+                        } else
+                            collector.getCollectorGUI().openInventory(player);
+                    } else {
+                        double sum = collector.getAmounts()
                                 .entrySet()
                                 .stream()
                                 .filter(entry -> entry.getKey() != CollectionType.TNT && entry.getValue() > 0)
                                 .mapToDouble(entry -> (entry.getValue() * entry.getKey().getValue()))
                                 .sum();
-                        if (money == 0) {
-                            player.sendMessage(Messages.NOTHING_TO_SELL.toString());
-                        } else {
-                            collector.getAmounts().entrySet().stream().filter(entry -> entry.getKey() != CollectionType.TNT).forEach(entry -> collector.reset(entry.getKey()));
-                            INSTANCE.getVenom().getEconomy().depositPlayer(player, money);
-                            player.sendMessage(Messages.SOLD.toString().replace("{amount}", String.valueOf(money)));
-                        }
-                    } else if (Utils.isItem(event.getItem(), ItemType.TNT_WAND.getItemStack())) {
-                        int amount = collector.getAmounts().entrySet().stream().filter(entry -> entry.getKey() == CollectionType.TNT).mapToInt(Map.Entry::getValue).sum();
-                        if (amount == 0) {
-                            player.sendMessage(Messages.NO_TNT_TO_DEPOSIT.toString());
-                        } else {
-                            collector.reset(CollectionType.TNT);
-                            player.sendMessage(Messages.COLLECTED_TNT.toString().replace("{amount}", String.valueOf(amount)));
-                            Utils.getFactionByPlayer(player).addAmountToTntBank(amount);
-                        }
-                    } else {
-                        collector.getCollectorGUI().openInventory(player);
+                        INSTANCE.getVenom().getEconomy().depositPlayer(player, sum);
+                        player.sendMessage(Messages.SOLD.toString().replace("{amount}", String.valueOf(sum)));
+                        event.setCancelled(true);
+                        INSTANCE.getCollectorHashMap().remove(INSTANCE.chunkToString(block.getChunk()));
+                        block.getWorld().dropItemNaturally(block.getLocation(), ItemType.COLLECTOR.getItemStack());
                     }
-                } else {
-                    collector.getCollectorGUI().openInventory(player);
                 }
             }
         }
-    }
-
-    @EventHandler
-    public void onBlockPlace(BlockPlaceEvent event) {
-        if (!event.isCancelled() && event.getBlockPlaced() != null && event.getItemInHand() != null && Utils.isItem(event.getItemInHand(), ItemType.COLLECTOR.getItemStack())) {
-            Player player = event.getPlayer();
-            Location location = event.getBlockPlaced().getLocation();
-            if (!canPlace(player, location)) {
-                player.sendMessage(Messages.YOU_CANT_PLACE_HERE.toString());
-                event.setCancelled(true);
-            } else if (INSTANCE.containsCollector(location.getChunk())) {
-                player.sendMessage(Messages.ALREADY_COLLECTOR_IN_CHUNK.toString());
-                event.setCancelled(true);
-            } else {
-                INSTANCE.getCollectorHashMap().put(INSTANCE.chunkToString(location.getChunk()), new Collector(location));
-            }
-        }
-    }
-
-    @EventHandler
-    public void onBlockBreak(BlockBreakEvent event) {
-        if (!event.isCancelled()) {
-            Player player = event.getPlayer();
-            Block block = event.getBlock();
-            if (block.getType() == Material.SUGAR_CANE_BLOCK) {
-                final Collector collector = INSTANCE.findCollector(block.getChunk());
-                if (collector == null) {
-                    player.sendMessage(Messages.ONLY_USED_IN_COLLECTOR_CHUNK.toString());
-                    event.setCancelled(true);
-                    return;
-                }
-                final boolean isItem = Utils.isItem(event.getPlayer().getItemInHand(), ItemType.HARVESTER_HOE.getItemStack());
-                int a = 0;
-                Block next = block;
-                while (next != null && next.getType() == Material.SUGAR_CANE_BLOCK) {
-                    Utils.editBlockType(next.getLocation(), Material.AIR);
-                    a += isItem ? 2 : 1;
-                    next = next.getRelative(BlockFace.UP);
-                }
-                collector.addToAmounts(CollectionType.SUGAR_CANE, a);
-                event.setCancelled(true);
-                return;
-            }
-            final Collector collector = INSTANCE.findCollector(block.getChunk());
-            if (collector != null && collector.getLocation().equals(block.getLocation())) {
-                if (!canPlace(player, block.getLocation())) {
-                    player.sendMessage(Messages.YOU_CANT_PLACE_HERE.toString());
-                    event.setCancelled(true);
-                    return;
-                }
-                INSTANCE.getCollectorHashMap().remove(INSTANCE.chunkToString(block.getChunk()));
-                block.getWorld().dropItemNaturally(block.getLocation(), ItemType.COLLECTOR.getItemStack());
-                event.setCancelled(true);
-            }
-        }
-
     }
 
     @EventHandler
@@ -208,7 +167,7 @@ public class EntityListener implements Listener {
                         int amount = value.getAmount(collectionType1);
                         if (amount > 0) {
 
-                            int remainder = sub10OrReturn0(amount, collectionType.get() == CollectionType.TNT ? 64 : INSTANCE.getConfig().getInt("sell-quantity")),
+                            int remainder = Utils.sub10OrReturn0(amount, collectionType.get() == CollectionType.TNT ? 64 : INSTANCE.getConfig().getInt("sell-quantity")),
                                     amountToBeSubtracted = collectionType.get() == CollectionType.TNT ? 64 : INSTANCE.getConfig().getInt("sell-quantity");
                             if (remainder > 0) amountToBeSubtracted = remainder;
 
@@ -262,16 +221,5 @@ public class EntityListener implements Listener {
                         .filter(entry -> entry.getValue().getViewers().contains(player.getUniqueId()))
                         .findFirst()
                         .ifPresent(entry -> entry.getValue().getViewers().remove(player.getUniqueId())));
-    }
-
-    private int sub10OrReturn0(int i, int divisor) {
-        return i < 0 ? -1 : i % divisor > 0 && i < divisor ? i % divisor : 0;
-    }
-
-    private boolean canPlace(Player player, Location location) {
-        MPlayer mPlayer = MPlayer.get(player);
-        Faction target = Utils.getFactionAt(location);
-        return !target.isNone() && Venom.getInstance().getWorldGuardPlugin().canBuild(player, location) && target.getName().equals(mPlayer.getFaction().getName()) &&
-                mPlayer.getFaction().isPermitted(MPerm.getPermBuild(), mPlayer.getRelationTo(target));
     }
 }

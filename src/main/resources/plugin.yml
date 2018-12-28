@@ -1,5 +1,5 @@
 name: VenomCollector
 author: LilProteinShake (Simpleness)
-version: 1.0
+version: 2.0
 main: com.protein.factioncollector.FactionCollector
 depend: [Venom]

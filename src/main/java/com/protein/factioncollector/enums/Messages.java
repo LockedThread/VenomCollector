@@ -7,6 +7,8 @@ public enum Messages {
     NO_PERMISSION("&c&l(!) &cNo permission!"),
     NOT_ONLINE("&c&l(!) &c{player} is not online!"),
     YOU_CANT_PLACE_HERE("&c&l(!) &cYou can't place this here!"),
+    CANT_PLACE_IN_WILDERNESS("&c&l(!) &cYou can't place this in the Wilderness!"),
+    MUST_REMOVE_COLLECTORS("&c&l(!) &cYou must remove your faction collectors before doing this!"),
     ALREADY_COLLECTOR_IN_CHUNK("&c&l(!) &cThere's already a Faction Collector in this chunk!"),
     SOLD("&2&l+{amount}"),
     ERROR("&c&l(!) &cError parsing command!"),

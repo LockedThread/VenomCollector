@@ -5,7 +5,9 @@ import com.protein.factioncollector.commands.FactionCollectorCommand;
 import com.protein.factioncollector.enums.CollectionType;
 import com.protein.factioncollector.enums.ItemType;
 import com.protein.factioncollector.enums.Messages;
+import com.protein.factioncollector.listeners.BlockListener;
 import com.protein.factioncollector.listeners.EntityListener;
+import com.protein.factioncollector.listeners.FactionListener;
 import com.protein.factioncollector.objs.Collector;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -27,7 +29,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
 
-@ModuleInfo(name = "FactionCollector", author = "LilProteinShake", version = "1.0", description = "CropHopper and VoidChest that collects mobs, tnt, and crops")
+@ModuleInfo(name = "FactionCollector", author = "LilProteinShake", version = "2.0", description = "CropHopper and VoidChest that collects mobs, tnt, and crops")
 public class FactionCollector extends Module {
 
     private static FactionCollector instance = null;
@@ -113,6 +115,8 @@ public class FactionCollector extends Module {
 
         getCommandHandler().register(this, new FactionCollectorCommand(this));
         getServer().getPluginManager().registerEvents(new EntityListener(), this);
+        getServer().getPluginManager().registerEvents(new FactionListener(), this);
+        getServer().getPluginManager().registerEvents(new BlockListener(), this);
 
         getLogger().info("Finished initializing FactionCollector (" + (System.currentTimeMillis() - startTime) + ")");
     }
