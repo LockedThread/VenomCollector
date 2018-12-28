@@ -8,8 +8,6 @@ import com.protein.factioncollector.enums.CollectionType;
 import com.protein.factioncollector.enums.ItemType;
 import com.protein.factioncollector.enums.Messages;
 import com.protein.factioncollector.objs.Collector;
-import me.aceix8.outposts.AceOutposts;
-import me.aceix8.outposts.api.OutpostAPI;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -26,7 +24,6 @@ import org.venompvp.venom.utils.Utils;
 public class BlockListener implements Listener {
 
     private static final FactionCollector INSTANCE = FactionCollector.getInstance();
-    private static final OutpostAPI OUTPOST_API = AceOutposts.getInstance().getApi();
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
