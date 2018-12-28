@@ -169,8 +169,9 @@ public class EntityListener implements Listener {
                                     player.getWorld().dropItemNaturally(player.getLocation(), new ItemStack(Material.TNT, amountToBeSubtracted));
                                 }
                             } else {
-                                INSTANCE.getVenom().getEconomy().depositPlayer(player, collectionType1.getValue() * amountToBeSubtracted);
-                                player.sendMessage(Messages.SOLD.toString().replace("{amount}", String.valueOf(collectionType1.getValue() * amountToBeSubtracted)));
+                                double shmoney = (collectionType1.getValue() * amountToBeSubtracted) * (OUTPOST_API.isFactionControllingAnOutpost(Utils.getFactionByPlayer(player)) ? 2 : 1);
+                                INSTANCE.getVenom().getEconomy().depositPlayer(player, shmoney);
+                                player.sendMessage(Messages.SOLD.toString().replace("{amount}", String.valueOf(shmoney)));
                             }
                             value.subtractFromAmounts(collectionType1, amountToBeSubtracted);
                             value.update(collectionType1);
