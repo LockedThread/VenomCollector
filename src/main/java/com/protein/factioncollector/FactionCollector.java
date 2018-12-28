@@ -95,7 +95,7 @@ public class FactionCollector extends Module {
                 dataFile.createNewFile();
                 collectorHashMap = new HashMap<>();
             } else try (FileReader reader = new FileReader(dataFile)) {
-                HashMap<String, Collector> map = getVenom().getGson().fromJson(reader, new TypeToken<HashMap<String, Collector>>() {
+                HashMap<String, Collector> map = getGson().fromJson(reader, new TypeToken<HashMap<String, Collector>>() {
                 }.getType());
                 if (map == null || map.isEmpty()) {
                     collectorHashMap = new HashMap<>();
@@ -130,7 +130,7 @@ public class FactionCollector extends Module {
     public void onDisable() {
         if (!collectorHashMap.isEmpty()) {
             try (FileWriter fileWriter = new FileWriter(dataFile)) {
-                fileWriter.write(getVenom().getGson().toJson(collectorHashMap));
+                fileWriter.write(getGson().toJson(collectorHashMap));
             } catch (IOException e) {
                 e.printStackTrace();
             }
