@@ -130,6 +130,7 @@ public class EntityListener implements Listener {
                 }
                 INSTANCE.getCollectorHashMap().remove(INSTANCE.chunkToString(block.getChunk()));
                 block.getWorld().dropItemNaturally(block.getLocation(), ItemType.COLLECTOR.getItemStack());
+                event.setCancelled(true);
             }
         }
 
