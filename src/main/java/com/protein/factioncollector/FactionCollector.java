@@ -135,7 +135,7 @@ public class FactionCollector extends Module {
                 e.printStackTrace();
             }
         }
-        disableCommands();
+        disableCommands(this);
         instance = null;
     }
 
