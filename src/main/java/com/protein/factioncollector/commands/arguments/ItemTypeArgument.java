@@ -15,6 +15,11 @@ public class ItemTypeArgument extends Argument<ItemType> {
     }
 
     @Override
+    public String unableToParse() {
+        return check + " is unable to be parsed as an ItemType";
+    }
+
+    @Override
     public boolean isArgumentType() {
         if (check.equalsIgnoreCase("collector")) {
             setValue(ItemType.COLLECTOR);
