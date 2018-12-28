@@ -34,7 +34,7 @@ public class FactionCollectorGiveCommand extends Command {
         OptionalIntegerArgument optionalIntegerArgument = (OptionalIntegerArgument) args.get(2);
         int amount = optionalIntegerArgument.isPresent() ? optionalIntegerArgument.getValue() : 1;
         IntStream.range(0, amount).forEach(i -> target.getInventory().addItem(itemType.getItemStack()));
-        sender.sendMessage(Messages.GIVEN.toString().replace("{player}", target.getName()).replace("{item-type}", itemType.toString()));
+        sender.sendMessage(Messages.GIVEN.toString().replace("{player}", target.getName()).replace("{item-type}", amount == 1 ? itemType.toString() : itemType.toString() + "s").replace("{amount}", String.valueOf(amount)));
     }
 
     @Override
