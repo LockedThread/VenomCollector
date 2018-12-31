@@ -16,7 +16,8 @@ public enum Messages {
     COLLECTED_TNT("&a&l(!) &aYou've deposited {amount} to your faction's TNTBank!"),
     NO_TNT_TO_DEPOSIT("&c&l(!) &cYou don't have any TNT to deposit"),
     NOTHING_TO_SELL("&c&l(!) &cNothing to sell in the Faction Collector"),
-    ONLY_USED_IN_COLLECTOR_CHUNK("&c&l(!) &cA Faction Collector must be placed inside the chunk to be able to use this!");
+    ONLY_USED_IN_COLLECTOR_CHUNK("&c&l(!) &cA Faction Collector must be placed inside the chunk to be able to use this!"),
+    EXCEEDED_MAX_SPAWNERS("&c&l(!) &cYou have exceeded the limit of 250 spawners per chunk!");
 
     private String message;
 

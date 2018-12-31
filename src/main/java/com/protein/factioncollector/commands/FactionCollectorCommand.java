@@ -17,7 +17,7 @@ public class FactionCollectorCommand extends Command implements ParentCommand {
                 "factioncollector",
                 "command to give people collector related items",
                 Collections.emptyList(),
-                "venom.factioncollector.give",
+                "factioncollector.give",
                 false,
                 "factioncollectors", "collector", "collectors");
     }
@@ -26,7 +26,7 @@ public class FactionCollectorCommand extends Command implements ParentCommand {
     public void execute(CommandSender sender, List<Argument> args, String label) {
         sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e&l[!] Faction Collector\n"
                 + "&b/" + label + " list\n"
-                + "&b/" + label + " give [player] [itemtype]"));
+                + "&b/" + label + " give [player] [itemtype] [amount]"));
     }
 
     @Override
@@ -36,6 +36,6 @@ public class FactionCollectorCommand extends Command implements ParentCommand {
 
     @Override
     public void setupSubCommands() {
-        addSubCommands(new FactionCollectorListCommand(module), new FactionCollectorGiveCommand(module));
+        addSubCommands(new FactionCollectorListCommand(module), new FactionCollectorGiveCommand(module), new FactionCollectorFindCommand(module), new FactionCollectorRemoveCommand(module));
     }
 }

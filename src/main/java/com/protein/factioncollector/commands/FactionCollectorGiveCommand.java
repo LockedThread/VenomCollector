@@ -23,7 +23,7 @@ public class FactionCollectorGiveCommand extends Command {
                 "give",
                 "give players collector items",
                 Arrays.asList(PlayerArgument.class, ItemTypeArgument.class, OptionalIntegerArgument.class),
-                "venom.factioncollector.give",
+                "factioncollector.give",
                 false);
     }
 

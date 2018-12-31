@@ -17,7 +17,7 @@ public class FactionCollectorListCommand extends Command {
                 "list",
                 "Lists itemtypes",
                 Collections.emptyList(),
-                "venom.factioncollector.give",
+                "factioncollector.give",
                 false);
     }
 

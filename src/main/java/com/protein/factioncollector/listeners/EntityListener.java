@@ -40,47 +40,49 @@ public class EntityListener implements Listener {
         Player player = event.getPlayer();
         if (event.getClickedBlock() != null) {
             Block block = event.getClickedBlock();
-            final Collector collector = INSTANCE.findCollector(block.getChunk());
-            if (collector != null && Utils.compareLocations(collector.getLocation(), block.getLocation())) {
-                if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                    event.setCancelled(true);
-                    if (event.getItem() != null) {
-                        if (Utils.isItem(event.getItem(), ItemType.SELL_WAND.getItemStack())) {
-                            double money = collector.getAmounts()
-                                    .entrySet()
-                                    .stream()
-                                    .filter(entry -> entry.getKey() != CollectionType.TNT && entry.getValue() > 0)
-                                    .mapToDouble(entry -> (entry.getValue() * entry.getKey().getValue()))
-                                    .sum();
-                            if (money == 0) {
-                                player.sendMessage(Messages.NOTHING_TO_SELL.toString());
-                            } else {
-                                if (OUTPOST_API.isFactionControllingAnOutpost(Utils.getFactionByPlayer(player))) {
-                                    money *= 2;
+            if (block.getType() == Material.BEACON) {
+                final Collector collector = INSTANCE.findCollector(block.getChunk());
+                if (collector != null && Utils.compareLocations(collector.getLocation(), block.getLocation())) {
+                    if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                        event.setCancelled(true);
+                        if (event.getItem() != null) {
+                            if (Utils.isItem(event.getItem(), ItemType.SELL_WAND.getItemStack())) {
+                                double money = collector.getAmounts()
+                                        .entrySet()
+                                        .stream()
+                                        .filter(entry -> entry.getKey() != CollectionType.TNT && entry.getValue() > 0)
+                                        .mapToDouble(entry -> (entry.getValue() * entry.getKey().getValue()))
+                                        .sum();
+                                if (money == 0) {
+                                    player.sendMessage(Messages.NOTHING_TO_SELL.toString());
+                                } else {
+                                    if (OUTPOST_API.isFactionControllingAnOutpost(Utils.getFactionByPlayer(player))) {
+                                        money *= 2;
+                                    }
+                                    collector.getAmounts().entrySet().stream().filter(entry -> entry.getKey() != CollectionType.TNT).forEach(entry -> collector.reset(entry.getKey()));
+                                    INSTANCE.getVenom().getEconomy().depositPlayer(player, money);
+                                    player.sendMessage(Messages.SOLD.toString().replace("{amount}", String.valueOf(money)));
                                 }
-                                collector.getAmounts().entrySet().stream().filter(entry -> entry.getKey() != CollectionType.TNT).forEach(entry -> collector.reset(entry.getKey()));
-                                INSTANCE.getVenom().getEconomy().depositPlayer(player, money);
-                                player.sendMessage(Messages.SOLD.toString().replace("{amount}", String.valueOf(money)));
-                            }
-                        } else if (Utils.isItem(event.getItem(), ItemType.TNT_WAND.getItemStack())) {
-                            int amount = collector.getAmounts().entrySet().stream().filter(entry -> entry.getKey() == CollectionType.TNT).mapToInt(Map.Entry::getValue).sum();
-                            if (amount == 0) {
-                                player.sendMessage(Messages.NO_TNT_TO_DEPOSIT.toString());
+                            } else if (Utils.isItem(event.getItem(), ItemType.TNT_WAND.getItemStack())) {
+                                int amount = collector.getAmounts().entrySet().stream().filter(entry -> entry.getKey() == CollectionType.TNT).mapToInt(Map.Entry::getValue).sum();
+                                if (amount == 0) {
+                                    player.sendMessage(Messages.NO_TNT_TO_DEPOSIT.toString());
+                                } else {
+                                    collector.reset(CollectionType.TNT);
+                                    player.sendMessage(Messages.COLLECTED_TNT.toString().replace("{amount}", String.valueOf(amount)));
+                                    Utils.getFactionByPlayer(player).addAmountToTntBank(amount);
+                                }
                             } else {
-                                collector.reset(CollectionType.TNT);
-                                player.sendMessage(Messages.COLLECTED_TNT.toString().replace("{amount}", String.valueOf(amount)));
-                                Utils.getFactionByPlayer(player).addAmountToTntBank(amount);
+                                collector.getCollectorGUI().openInventory(player);
                             }
-                        } else {
+                        } else
                             collector.getCollectorGUI().openInventory(player);
-                        }
-                    } else
-                        collector.getCollectorGUI().openInventory(player);
-                } else {
-                    event.setCancelled(true);
-                    INSTANCE.getCollectorHashMap().remove(INSTANCE.chunkToString(block.getChunk()));
-                    block.setType(Material.AIR);
-                    block.getWorld().dropItemNaturally(block.getLocation(), ItemType.COLLECTOR.getItemStack());
+                    } else if (event.getAction() == Action.LEFT_CLICK_BLOCK && !Utils.canEdit(player, block.getLocation())) {
+                        event.setCancelled(true);
+                        INSTANCE.getCollectorHashMap().remove(INSTANCE.chunkToString(block.getChunk()));
+                        block.setType(Material.AIR);
+                        block.getWorld().dropItemNaturally(block.getLocation(), ItemType.COLLECTOR.getItemStack());
+                    }
                 }
             }
         }
