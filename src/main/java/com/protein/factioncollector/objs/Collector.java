@@ -13,6 +13,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -79,7 +80,7 @@ public class Collector {
 
     public void update(CollectionType collectionType) {
         if (!viewers.isEmpty()) {
-            viewers.stream().map(Bukkit::getPlayer).forEach(player -> {
+            viewers.stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(player -> {
                 Inventory inventory = player.getOpenInventory().getTopInventory();
                 ItemStack[] itemStacks = inventory.getContents().clone();
                 IntStream.range(0, itemStacks.length).filter(i -> itemStacks[i] != null).forEach(i -> {
