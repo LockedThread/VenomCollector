@@ -18,7 +18,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class Collector {
 
@@ -50,18 +49,15 @@ public class Collector {
     }
 
     public void subtractFromAmounts(CollectionType collectionType, int amount) {
-        FactionCollector.getInstance().getVenom().executorService.submit(() -> {
-            amounts.computeIfPresent(collectionType, (collectionType1, i) -> i -= amount);
-            FactionCollector.getInstance().getServer().getScheduler().runTask(FactionCollector.getInstance(), () -> update(collectionType));
-        });
+        amounts.computeIfPresent(collectionType, (collectionType1, i) -> i -= amount);
+        update(collectionType);
     }
 
     public void addToAmounts(CollectionType collectionType, int amount) {
-        FactionCollector.getInstance().getVenom().executorService.submit(() -> {
-            amounts.computeIfPresent(collectionType, (collectionType1, i) -> i += amount);
-            amounts.putIfAbsent(collectionType, amount);
-            FactionCollector.getInstance().getServer().getScheduler().runTask(FactionCollector.getInstance(), () -> update(collectionType));
-        });
+        amounts.computeIfPresent(collectionType, (collectionType1, i) -> i += amount);
+        amounts.putIfAbsent(collectionType, amount);
+        update(collectionType);
+
     }
 
     public void setAmount(CollectionType collectionType, int amount) {
@@ -69,9 +65,7 @@ public class Collector {
     }
 
     public void reset(CollectionType collectionType) {
-        FactionCollector.getInstance().getVenom().executorService.submit(() -> {
-            amounts.remove(collectionType);
-        });
+        amounts.remove(collectionType);
     }
 
     public int getAmount(CollectionType collectionType) {
@@ -80,22 +74,24 @@ public class Collector {
 
     public void update(CollectionType collectionType) {
         if (!viewers.isEmpty()) {
+            final EntityType entityType = collectionType.parseEntityType();
             viewers.stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(player -> {
                 Inventory inventory = player.getOpenInventory().getTopInventory();
                 ItemStack[] itemStacks = inventory.getContents().clone();
-                IntStream.range(0, itemStacks.length).filter(i -> itemStacks[i] != null).forEach(i -> {
-                    ItemStack itemStack = itemStacks[i];
-                    if ((itemStack.getType() == Material.MONSTER_EGG &&
-                            collectionType.parseEntityType().isPresent() &&
-                            EntityType.fromId(INSTANCE.getVenom().getSilkUtil().getStoredEggEntityID(itemStack)) == collectionType.parseEntityType().get()) ||
-                            (collectionType.parseMaterial().isPresent() &&
-                                    itemStack.getType() == collectionType.parseMaterial().get())) {
-                        ItemMeta itemMeta = itemStack.getItemMeta();
-                        itemMeta.setLore(INSTANCE.getConfig().getStringList("gui.item-template.lore").stream().map(s -> ChatColor.translateAlternateColorCodes('&', s.replace("{amount}", String.valueOf(getAmount(collectionType))))).collect(Collectors.toList()));
-                        itemStack.setItemMeta(itemMeta);
-                        itemStacks[i] = itemStack;
+                int bound = itemStacks.length;
+                for (int i = 0; i < bound; i++) {
+                    if (itemStacks[i] != null) {
+                        ItemStack itemStack = itemStacks[i];
+                        if (entityType != null && (itemStack.getType() == Material.MONSTER_EGG &&
+                                EntityType.fromId(INSTANCE.getVenom().getSilkUtil().getStoredEggEntityID(itemStack)) == collectionType.parseEntityType()) ||
+                                itemStack.getType() == collectionType.parseMaterial()) {
+                            ItemMeta itemMeta = itemStack.getItemMeta();
+                            itemMeta.setLore(INSTANCE.getConfig().getStringList("gui.item-template.lore").stream().map(s -> ChatColor.translateAlternateColorCodes('&', s.replace("{amount}", String.valueOf(getAmount(collectionType))))).collect(Collectors.toList()));
+                            itemStack.setItemMeta(itemMeta);
+                            itemStacks[i] = itemStack;
+                        }
                     }
-                });
+                }
                 inventory.setContents(itemStacks);
                 player.updateInventory();
             });

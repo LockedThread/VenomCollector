@@ -63,7 +63,9 @@ public class FactionCollector extends Module {
         whiteListedCollectionTypes = new ArrayList<>(getConfig().getStringList("whitelisted-mobs"));
 
         whiteListedCollectionTypes.stream().map(whiteListedCollectionType -> CollectionType.valueOf(whiteListedCollectionType.replace("-", "_").toUpperCase())).forEach(collectionType -> {
-            ItemStack stack = collectionType.parseEntityType().isPresent() ? getVenom().getSilkUtil().newEggItem(collectionType.parseEntityType().get().getTypeId(), 1) : new ItemStack(Material.matchMaterial(collectionType.name()), 1);
+            ItemStack stack = collectionType.parseEntityType() != null ?
+                    getVenom().getSilkUtil().newEggItem(collectionType.parseEntityType().getTypeId(), 1) :
+                    new ItemStack(Material.matchMaterial(collectionType.name()), 1);
             ItemMeta meta = stack.getItemMeta();
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', getConfig().getString("gui.item-template.name")));
             meta.setLore(getConfig().getStringList("gui.item-template.lore"));

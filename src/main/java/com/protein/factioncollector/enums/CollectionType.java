@@ -3,55 +3,68 @@ package com.protein.factioncollector.enums;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 
-import java.util.Arrays;
-import java.util.Optional;
-
 public enum CollectionType {
 
     /*Items*/
-    CACTUS,
-    SUGAR_CANE,
-    TNT,
+    CACTUS(Material.CACTUS),
+    SUGAR_CANE(Material.SUGAR_CANE),
+    TNT(Material.TNT),
 
     /*Entity Types*/
-    CREEPER,
-    SKELETON,
-    SPIDER,
-    GIANT,
-    ZOMBIE,
-    SLIME,
-    GHAST,
-    PIG_ZOMBIE,
-    ENDERMAN,
-    CAVE_SPIDER,
-    SILVERFISH,
-    BLAZE,
-    MAGMA_CUBE,
-    ENDER_DRAGON,
-    WITHER,
-    BAT,
-    WITCH,
-    ENDERMITE,
-    GUARDIAN,
-    PIG,
-    SHEEP,
-    COW,
-    CHICKEN,
-    SQUID,
-    WOLF,
-    MUSHROOM_COW,
-    SNOWMAN,
-    OCELOT,
-    IRON_GOLEM,
-    HORSE,
-    RABBIT,
-    VILLAGER,
-    ENDER_CRYSTAL;
+    CREEPER(EntityType.CREEPER),
+    SKELETON(EntityType.SKELETON),
+    SPIDER(EntityType.SPIDER),
+    GIANT(EntityType.GIANT),
+    ZOMBIE(EntityType.ZOMBIE),
+    SLIME(EntityType.SLIME),
+    GHAST(EntityType.GHAST),
+    PIG_ZOMBIE(EntityType.PIG_ZOMBIE),
+    ENDERMAN(EntityType.ENDERMAN),
+    CAVE_SPIDER(EntityType.CAVE_SPIDER),
+    SILVERFISH(EntityType.SILVERFISH),
+    BLAZE(EntityType.BLAZE),
+    MAGMA_CUBE(EntityType.MAGMA_CUBE),
+    ENDER_DRAGON(EntityType.ENDER_DRAGON),
+    WITHER(EntityType.WITHER),
+    BAT(EntityType.BAT),
+    WITCH(EntityType.WITCH),
+    ENDERMITE(EntityType.ENDERMITE),
+    GUARDIAN(EntityType.GUARDIAN),
+    PIG(EntityType.PIG),
+    SHEEP(EntityType.SHEEP),
+    COW(EntityType.COW),
+    CHICKEN(EntityType.CHICKEN),
+    SQUID(EntityType.SQUID),
+    WOLF(EntityType.WOLF),
+    MUSHROOM_COW(EntityType.MUSHROOM_COW),
+    SNOWMAN(EntityType.SNOWMAN),
+    OCELOT(EntityType.OCELOT),
+    IRON_GOLEM(EntityType.IRON_GOLEM),
+    HORSE(EntityType.HORSE),
+    RABBIT(EntityType.RABBIT),
+    VILLAGER(EntityType.VILLAGER),
+    ENDER_CRYSTAL(EntityType.ENDER_CRYSTAL);
+
+    private Material material = null;
+    private EntityType entityType = null;
+
+    CollectionType(EntityType entityType) {
+        this.entityType = entityType;
+    }
+
+    CollectionType(Material material) {
+        this.material = material;
+    }
 
     private double value;
 
-    public static Optional<CollectionType> fromEntityType(EntityType entityType) {
-        return Arrays.stream(CollectionType.values()).filter(collectionType -> collectionType.name().equals(entityType.name())).findFirst();
+    public static CollectionType fromEntityType(EntityType entityType) {
+        for (CollectionType value : values()) {
+            if (value.entityType == entityType) {
+                return value;
+            }
+        }
+        return null;
     }
 
     public double getValue() {
@@ -62,16 +75,24 @@ public enum CollectionType {
         this.value = value;
     }
 
-    public Optional<EntityType> parseEntityType() {
-        return Arrays.stream(EntityType.values()).filter(entityType -> entityType.name().equals(name())).findFirst();
+    public EntityType parseEntityType() {
+        return entityType;
     }
 
-    public Optional<Material> parseMaterial() {
-        return Arrays.stream(Material.values()).filter(material -> material.name().equals(name())).findFirst();
+    public Material parseMaterial() {
+        return material;
     }
 
     @Override
     public String toString() {
         return name();
+    }
+
+    public Material getMaterial() {
+        return material;
+    }
+
+    public EntityType getEntityType() {
+        return entityType;
     }
 }

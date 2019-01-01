@@ -106,7 +106,8 @@ public class EntityListener implements Listener {
 
     @EventHandler
     public void onSpawnerPreSpawn(SpawnerPreSpawnEvent event) {
-        if (INSTANCE.getWhiteListedCollectionTypes().contains(event.getSpawnedType().name()) || (INSTANCE.getWhiteListedCollectionTypes().contains("TNT")) && event.getSpawnedType() == EntityType.CREEPER) {
+        if (INSTANCE.getWhiteListedCollectionTypes().contains(event.getSpawnedType().name()) ||
+                (INSTANCE.getWhiteListedCollectionTypes().contains("TNT")) && event.getSpawnedType() == EntityType.CREEPER) {
             event.setCancelled(true);
             INSTANCE.getServer().getScheduler().runTaskAsynchronously(INSTANCE, () -> {
                 Collector collector = INSTANCE.findCollector(event.getLocation().getChunk());
@@ -117,7 +118,7 @@ public class EntityListener implements Listener {
                             collector.addToAmounts(CollectionType.TNT, 1);
                         }
                     } else {
-                        CollectionType.fromEntityType(event.getSpawnedType()).ifPresent(collectionType1 -> collector.addToAmounts(collectionType1, 1));
+                        collector.addToAmounts(CollectionType.fromEntityType(event.getSpawnedType()), 1);
                     }
                 }
             });
@@ -159,11 +160,9 @@ public class EntityListener implements Listener {
                     if (player.getUniqueId().toString().equals(viewer.toString())) {
                         int amount = value.getAmount(collectionType1);
                         if (amount > 0) {
-
                             int remainder = Utils.sub10OrReturn0(amount, collectionType.get() == CollectionType.TNT ? 64 : INSTANCE.getConfig().getInt("sell-quantity")),
                                     amountToBeSubtracted = collectionType.get() == CollectionType.TNT ? 64 : INSTANCE.getConfig().getInt("sell-quantity");
                             if (remainder > 0) amountToBeSubtracted = remainder;
-
                             if (collectionType.get() == CollectionType.TNT) {
                                 if (player.getInventory().firstEmpty() != -1) {
                                     player.getInventory().addItem(new ItemStack(Material.TNT, amountToBeSubtracted));
