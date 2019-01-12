@@ -3,7 +3,7 @@ package com.protein.factioncollector.commands;
 import com.massivecraft.factions.entity.BoardColl;
 import com.massivecraft.factions.entity.Faction;
 import com.protein.factioncollector.FactionCollector;
-import com.protein.factioncollector.queue.FindCollectorTask;
+import com.protein.factioncollector.tasks.FindCollectorTask;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;

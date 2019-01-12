@@ -11,7 +11,7 @@ public class ItemTypeArgument extends Argument<ItemType> {
 
     @Override
     public ItemType getValue() {
-        return super.getValue();
+        return value;
     }
 
     @Override

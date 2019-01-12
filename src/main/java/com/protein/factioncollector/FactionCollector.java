@@ -9,6 +9,7 @@ import com.protein.factioncollector.listeners.BlockListener;
 import com.protein.factioncollector.listeners.EntityListener;
 import com.protein.factioncollector.listeners.FactionListener;
 import com.protein.factioncollector.objs.Collector;
+import com.protein.factioncollector.tasks.SaveCollectorTask;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
@@ -106,8 +107,7 @@ public class FactionCollector extends Module {
                     collectorHashMap.forEach((k, v) -> v.initIgnored());
                 }
             }
-        } catch (
-                IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
@@ -119,6 +119,8 @@ public class FactionCollector extends Module {
         getServer().getPluginManager().registerEvents(new EntityListener(), this);
         getServer().getPluginManager().registerEvents(new FactionListener(), this);
         getServer().getPluginManager().registerEvents(new BlockListener(), this);
+
+        new SaveCollectorTask(dataFile, collectorHashMap).runTaskTimer(this, 0, 6000L);
 
         getLogger().info("Finished initializing FactionCollector (" + (System.currentTimeMillis() - startTime) + ")");
     }

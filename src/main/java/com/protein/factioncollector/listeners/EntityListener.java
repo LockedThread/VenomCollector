@@ -17,7 +17,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -38,14 +37,30 @@ public class EntityListener implements Listener {
     @EventHandler(priority = EventPriority.LOW)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        if (event.getClickedBlock() != null) {
-            Block block = event.getClickedBlock();
+        Block block = event.getClickedBlock();
+        if (block != null) {
             if (block.getType() == Material.BEACON) {
                 final Collector collector = INSTANCE.findCollector(block.getChunk());
                 if (collector != null && Utils.compareLocations(collector.getLocation(), block.getLocation())) {
                     if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                         event.setCancelled(true);
-                        if (event.getItem() != null) {
+                        if (player.isSneaking() && player.hasPermission("venom.anaconda")) {
+                            int tnt = collector.getAmount(CollectionType.TNT);
+                            double money = collector.getAmounts()
+                                    .entrySet()
+                                    .stream()
+                                    .filter(entry -> entry.getValue() > 0)
+                                    .mapToDouble(entry -> (entry.getValue() * entry.getKey().getValue()))
+                                    .sum() - tnt;
+                            if (OUTPOST_API.isFactionControllingAnOutpost(Utils.getFactionByPlayer(player))) {
+                                money *= 2;
+                            }
+                            INSTANCE.getVenom().getEconomy().depositPlayer(player, money);
+                            player.sendMessage(Messages.SOLD.toString().replace("{amount}", String.valueOf(money)));
+                            player.sendMessage(Messages.COLLECTED_TNT.toString().replace("{amount}", String.valueOf(tnt)));
+                            Utils.getFactionByPlayer(player).addAmountToTntBank(tnt);
+                            collector.getAmounts().clear();
+                        } else if (event.getItem() != null) {
                             if (Utils.isItem(event.getItem(), ItemType.SELL_WAND.getItemStack())) {
                                 double money = collector.getAmounts()
                                         .entrySet()
@@ -89,39 +104,21 @@ public class EntityListener implements Listener {
     }
 
     @EventHandler
-    public void onItemSpawn(ItemSpawnEvent event) {
-        if (event.getEntity() != null) {
-            final ItemStack itemStack = event.getEntity().getItemStack();
-            if (itemStack != null && (itemStack.getType() == Material.SUGAR_CANE || itemStack.getType() == Material.CACTUS)) {
-                event.setCancelled(true);
-                INSTANCE.getServer().getScheduler().runTaskAsynchronously(INSTANCE, () -> {
-                    final Collector collector = INSTANCE.findCollector(event.getLocation().getChunk());
-                    if (collector != null) {
-                        collector.addToAmounts(CollectionType.valueOf(itemStack.getType().name()), 1);
-                    }
-                });
-            }
-        }
-    }
-
-    @EventHandler
     public void onSpawnerPreSpawn(SpawnerPreSpawnEvent event) {
         if (INSTANCE.getWhiteListedCollectionTypes().contains(event.getSpawnedType().name()) ||
                 (INSTANCE.getWhiteListedCollectionTypes().contains("TNT")) && event.getSpawnedType() == EntityType.CREEPER) {
             event.setCancelled(true);
-            INSTANCE.getServer().getScheduler().runTaskAsynchronously(INSTANCE, () -> {
-                Collector collector = INSTANCE.findCollector(event.getLocation().getChunk());
-                if (collector != null) {
-                    if (event.getSpawnedType() == EntityType.CREEPER) {
-                        final int i = INSTANCE.getVenom().random.nextInt(2);
-                        if (i == 0) {
-                            collector.addToAmounts(CollectionType.TNT, 1);
-                        }
-                    } else {
-                        collector.addToAmounts(CollectionType.fromEntityType(event.getSpawnedType()), 1);
+            Collector collector = INSTANCE.findCollector(event.getLocation().getChunk());
+            if (collector != null) {
+                if (event.getSpawnedType() == EntityType.CREEPER) {
+                    final int i = INSTANCE.getVenom().random.nextInt(2);
+                    if (i == 0) {
+                        collector.addToAmounts(CollectionType.TNT, 1);
                     }
+                } else {
+                    collector.addToAmounts(CollectionType.fromEntityType(event.getSpawnedType()), 1);
                 }
-            });
+            }
         }
     }
 

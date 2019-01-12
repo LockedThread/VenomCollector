@@ -1,4 +1,4 @@
-package com.protein.factioncollector.queue;
+package com.protein.factioncollector.tasks;
 
 import com.massivecraft.massivecore.ps.PS;
 import org.bukkit.Chunk;

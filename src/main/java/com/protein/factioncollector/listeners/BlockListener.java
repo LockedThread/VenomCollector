@@ -8,20 +8,25 @@ import com.protein.factioncollector.enums.CollectionType;
 import com.protein.factioncollector.enums.ItemType;
 import com.protein.factioncollector.enums.Messages;
 import com.protein.factioncollector.objs.Collector;
+import net.minecraft.server.v1_8_R3.BlockPosition;
+import net.minecraft.server.v1_8_R3.Blocks;
+import net.minecraft.server.v1_8_R3.EnumDirection;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockGrowEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.venompvp.venom.Venom;
 import org.venompvp.venom.utils.Utils;
@@ -32,7 +37,35 @@ public class BlockListener implements Listener {
 
     private static final FactionCollector INSTANCE = FactionCollector.getInstance();
 
+
+    public boolean canGrow(World bukkitWorld, Block bukkitBlock) {
+        final BlockPosition blockPosition = new BlockPosition(bukkitBlock.getX(), bukkitBlock.getY(), bukkitBlock.getZ());
+        final net.minecraft.server.v1_8_R3.World nmsWorld = ((CraftWorld) bukkitWorld).getHandle();
+
+        for (EnumDirection enumDirection : EnumDirection.EnumDirectionLimit.HORIZONTAL) {
+            if (nmsWorld.getType(blockPosition.shift(enumDirection)).getBlock().getMaterial().isBuildable()) {
+                return false;
+            }
+        }
+
+        final net.minecraft.server.v1_8_R3.Block block = nmsWorld.getType(blockPosition.down()).getBlock();
+        return block == Blocks.CACTUS || block == Blocks.SAND;
+    }
+
     @EventHandler
+    public void onBlockGrow(BlockGrowEvent event) {
+        if (!canGrow(event.getBlock().getWorld(), event.getBlock())) {
+            if (event.getNewState().getType() == Material.CACTUS) {
+                event.setCancelled(true);
+                final Collector collector = INSTANCE.findCollector(event.getBlock().getChunk());
+                if (collector != null) {
+                    collector.addToAmounts(CollectionType.CACTUS, 1);
+                }
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
         if (!event.isCancelled() && event.getBlockPlaced() != null && event.getItemInHand() != null) {
             Location location = event.getBlockPlaced().getLocation();
@@ -67,20 +100,11 @@ public class BlockListener implements Listener {
     }
 
     @EventHandler
-    public void onEntityExplode(EntityExplodeEvent event) {
-        if (event.blockList().stream().anyMatch(block -> block.getType() == Material.BEACON)) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
     public void onBlockExplode(BlockExplodeEvent event) {
-        if (event.blockList().stream().anyMatch(block -> block.getType() == Material.BEACON)) {
-            event.setCancelled(true);
-        }
+        event.blockList().stream().filter(block -> block.getType() == Material.BEACON).forEach(block -> event.blockList().remove(block));
     }
 
-    @EventHandler(priority = EventPriority.LOW)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         Block block = event.getBlock();
